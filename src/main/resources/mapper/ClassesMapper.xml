@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+这个mapper指定一个唯一的namespace，namespace的值习惯上设置成包名+sql映射文件名，
+这样就能够保证namespace的值是唯一的
+ -->
+<mapper namespace="com.wpw.mybatisstudy.mapper.ClassesMapper">
+    <!--根据班级id查询班级信息(带老师的信息)-->
+    <resultMap id="classesResultMap" type="com.wpw.mybatisstudy.entity.Classes">
+        <id property="id" column="cid"></id>
+        <result property="name" column="cname"></result>
+        <association property="teacher" javaType="com.wpw.mybatisstudy.entity.Teacher">
+            <id property="id" column="tid"></id>
+            <result property="name" column="tname"></result>
+        </association>
+    </resultMap>
+
+    <select id="selectClasses" parameterType="int" resultMap="classesResultMap">
+        select c.id cid, c.name cname, t.id tid, t.name tname
+        from classes c,
+             teacher t
+        where c.teacher_id = t.id
+          and c.id = #{id}
+    </select>
+
+    <resultMap id="secondResultMap" type="com.wpw.mybatisstudy.entity.Classes">
+        <id property="id" column="cid"></id>
+        <result property="name" column="cname"></result>
+        <association property="teacher" column="teacher_id" select="getTeacher"></association>
+    </resultMap>
+
+    <select id="select" parameterType="int" resultMap="secondResultMap">
+        select c.id cid, c.name cname c.teacher_id teacher_id
+        from classes c
+        where c.id = #{id}
+    </select>
+
+    <resultMap id="teacherResultMap" type="com.wpw.mybatisstudy.entity.Teacher">
+        <id property="id" column="tid"></id>
+        <result property="name" column="tname"></result>
+    </resultMap>
+
+    <select id="getTeacher" parameterType="int" resultMap="teacherResultMap">
+        select t.id tid, t.name tname
+        from teacher
+        where t.id = #{id}
+    </select>
+
+    <select id="getUserListByClassesId" parameterType="int" resultMap="map">
+        select c.id         cid,
+               c.name       cname,
+               c.teacher_id teacher_id,
+               t.id         tid,
+               t.name       tname,
+               s.id         sid,
+               s.name       sname,
+               s.classes_id classes_id
+        from classes c,
+             teacher t,
+             student s
+        where c.teacher_id = t.id
+          and c.id = s.classes_id
+          and c.id = #{id}
+    </select>
+
+    <resultMap id="map" type="com.wpw.mybatisstudy.entity.Classes">
+        <id property="id" column="cid"></id>
+        <result property="name" column="cname"></result>
+        <association property="teacher" column="teacher_id" javaType="com.wpw.mybatisstudy.entity.Teacher">
+            <id property="id" column="tid"></id>
+            <result property="name" column="tname"></result>
+        </association>
+        <collection property="studentList" ofType="com.wpw.mybatisstudy.entity.Student">
+            <id property="id" column="sid"></id>
+            <result property="name" column="sname"></result>
+        </collection>
+    </resultMap>
+
+    <select id="selectUserList" parameterType="int" resultMap="mapOfUserList">
+        select c.id cid, c.name cname, c.teacher_id teacher_id
+        from classes c
+        where c.id = #{id}
+    </select>
+
+    <resultMap id="mapOfUserList" type="com.wpw.mybatisstudy.entity.Classes">
+        <id property="id" column="cid"/>
+        <result property="name" column="cname"/>
+        <association property="teacher" column="teacher_id" javaType="com.wpw.mybatisstudy.entity.Student"
+                     select="optionTeacher"/>
+        <collection property="studentList" ofType="com.wpw.mybatisstudy.entity.Student" column="cid"
+                    select="optionStudent"/>
+    </resultMap>
+
+    <select id="optionTeacher" parameterType="int" resultMap="teacherResultMap">
+        select t.id tid, t.name tname
+        from teacher t
+        where t.id = #{id}
+    </select>
+
+    <select id="optionStudent" parameterType="int" resultMap="studentMap">
+        select s.id sid, s.name sname
+        from student s
+        where s.classes_id = #{id}
+    </select>
+
+    <resultMap id="studentMap" type="com.wpw.mybatisstudy.entity.Student">
+        <id property="id" column="sid"></id>
+        <result property="name" column="sname"></result>
+    </resultMap>
+</mapper>
